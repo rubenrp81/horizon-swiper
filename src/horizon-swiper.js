@@ -1,9 +1,9 @@
 /*
  * Horizon Swiper
- * Version 1.0
- * Domain ( domain )
- * Copyright 2015 Sebastian Sauer
- * Licensed under MIT ( domain )
+ * Version 1.0.0
+ * Domain ( http://horizon-swiper.sebsauer.de/ )
+ * Copyright 2015 Sebastian Sauer ( http://www.sebsauer.de/ )
+ * Licensed under MIT ( https://github.com/sebsauer90/horizon-swiper/blob/master/LICENSE )
  */
 
 'use strict';
