@@ -1,0 +1,79 @@
+/*
+ * Horizon Swiper
+ * Version 1.0
+ * Domain ( domain )
+ * Copyright 2015 Sebastian Sauer
+ * Licensed under MIT ( domain )
+ */
+
+
+/* General
+/* -------------------------- */
+
+.horizon-swiper {
+  position: relative;
+  box-sizing: border-box;
+  background: #fff;
+
+  *,
+  *:before,
+  *:after {
+    box-sizing: border-box;
+  }
+
+  &.mouse-drag,
+  &.mouse-drag * {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+
+  /* Wrapper
+  /* -------------------------- */
+
+  .horizon-outer {
+    overflow: hidden;
+  }
+
+  .horizon-inner {
+    padding: 0;
+    text-align: center;
+    white-space: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+
+  /* Items
+  /* -------------------------- */
+
+  .horizon-item {
+    display: inline-block;
+    position: relative;
+    white-space: nowrap;
+  }
+
+
+  /* Arrows
+  /* -------------------------- */
+
+  .horizon-prev,
+  .horizon-next {
+    display: none;
+  }
+
+  &.show-arrows {
+    .horizon-prev,
+    .horizon-next {
+      display: block;
+    }
+  }
+
+  &.first-item .horizon-prev,
+  &.last-item .horizon-next {
+    opacity: 0.2;
+  }
+}
