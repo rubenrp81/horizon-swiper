@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A light free swiper that works with your native browser scrolling.",
   "author": "Sebastian Sauer (http://www.sebsauer.de)",
+  "repository": "https://github.com/sebsauer90/horizon-swiper",
   "license": "MIT",
   "dependencies": {
     "grunt": "^0.4.5",
