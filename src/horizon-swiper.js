@@ -42,6 +42,8 @@
     // Methods and callbacks
     onStart: function onStart() {},
     onEnd: function onEnd() {},
+    onSlideStart: function onSlideStart() {},
+    onSlideEnd: function onSlideEnd() {},
     onDragStart: function onDragStart() {},
     onDragEnd: function onDragEnd() {}
   };
@@ -240,6 +242,7 @@
         return;
       }
 
+      that.settings.onSlideStart();
       that.$inner.animate({
         scrollLeft: offset[0]
       }, that.settings.animateionSpeed, function () {
@@ -251,6 +254,7 @@
         }
 
         that._checkPosition();
+        that.settings.onSlideEnd();
         that.isAnimate = false;
       });
     };
@@ -345,9 +349,12 @@
         that.$element.on({
           'mousedown': function mousedown(e) {
             isClicked = true;
-            that.settings.onDragStart();
             mouseXposition = e.pageX;
             innerXposition = that.$inner.scrollLeft();
+
+            if (e.target.tagName.toLowerCase() !== 'button') {
+              that.settings.onDragStart();
+            }
           }
         });
 
@@ -359,8 +366,8 @@
             if (isClicked === true) {
               if (e.target.tagName.toLowerCase() !== 'button') {
                 that._checkPosition();
+                that.settings.onDragEnd();
               }
-              that.settings.onDragEnd();
             }
             isClicked = false;
           }

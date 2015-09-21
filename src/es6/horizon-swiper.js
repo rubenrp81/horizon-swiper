@@ -42,6 +42,8 @@
     // Methods and callbacks
     onStart: function() {},
     onEnd: function() {},
+    onSlideStart: function() {},
+    onSlideEnd: function() {},
     onDragStart: function() {},
     onDragEnd: function() {}
   };
@@ -250,6 +252,7 @@
         return;
       }
 
+      that.settings.onSlideStart();
       that.$inner.animate( {
         scrollLeft: offset[ 0 ]
       }, that.settings.animateionSpeed, () => {
@@ -261,6 +264,7 @@
         }
 
         that._checkPosition();
+        that.settings.onSlideEnd();
         that.isAnimate = false;
       });
     };
@@ -333,7 +337,6 @@
         }
       };
 
-
       // Touch events
 
       that.$element.on({
@@ -354,7 +357,6 @@
         }
       });
 
-
       // Mouse events
 
       if ( that.settings.mouseDrag === true &&
@@ -364,9 +366,12 @@
         that.$element.on({
           'mousedown': ( e ) => {
             isClicked = true;
-            that.settings.onDragStart();
             mouseXposition = e.pageX;
             innerXposition = that.$inner.scrollLeft();
+
+            if ( e.target.tagName.toLowerCase() !== 'button' ) {
+              that.settings.onDragStart();
+            }
           }
         });
 
@@ -378,8 +383,8 @@
             if ( isClicked === true ) {
               if ( e.target.tagName.toLowerCase() !== 'button' ) {
                 that._checkPosition();
+                that.settings.onDragEnd();
               }
-              that.settings.onDragEnd();
             }
             isClicked = false;
           }
