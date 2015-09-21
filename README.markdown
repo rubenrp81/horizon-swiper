@@ -23,8 +23,8 @@ $('.horizon-swiper.basic').horizonSwiper();
 ```
 
 ### Browser support
-* Chrome
-* FireFox
+* Google Chrome
+* Mozilla FireFox
 * Safari
 * Internet Explorer (11, 10, 9, 8)
 * Microsoft Edge

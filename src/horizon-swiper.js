@@ -55,6 +55,7 @@
     arrowPrev: ['<button class="horizon-prev">', '</button>'],
     arrowNext: ['<button class="horizon-next">', '</button>'],
     showArrowsClass: 'show-arrows',
+    mouseDragClass: 'mouse-drag',
     firstItemClass: 'first-item',
     lastItemClass: 'last-item'
   };
@@ -307,6 +308,7 @@
       var innerXposition = 0;
       var outerXposition = that.$inner.offset().left;
       var newPosition = 0;
+      var isTouching = false;
 
       var updatePosition = function updatePosition(e) {
         if (isTouchDevice === false) {
@@ -316,11 +318,12 @@
       };
 
       if (that.settings.mouseDrag === true && isTouchDevice === false) {
-        that.$element.addClass('mouse-drag');
+        that.$element.addClass(defaults.mouseDragClass);
 
         that.$element.on({
           'touchstart': function touchstart(e) {
             isTouchDevice = true;
+            isTouching = true;
             that.settings.onDragStart();
           },
           'mousedown': function mousedown(e) {
@@ -328,25 +331,28 @@
             that.settings.onDragStart();
             mouseXposition = e.pageX;
             innerXposition = that.$inner.scrollLeft();
-          },
-          'touchend': function touchend(e) {
-            that._checkPosition();
-            that.settings.onDragEnd();
-          },
-          'mouseup': function mouseup(e) {
-            if (e.target.tagName.toLowerCase() !== 'button') {
-              that._checkPosition();
-            }
-            that.settings.onDragEnd();
-          },
-          'mousemove': function mousemove(e) {
-            isClicked && updatePosition(e);
           }
         });
 
         defaults.$document.on({
+          'mousemove': function mousemove(e) {
+            isClicked && updatePosition(e);
+          },
           'mouseup': function mouseup(e) {
+            if (isClicked === true) {
+              if (e.target.tagName.toLowerCase() !== 'button') {
+                that._checkPosition();
+              }
+              that.settings.onDragEnd();
+            }
             isClicked = false;
+          },
+          'touchend': function touchend(e) {
+            if (isTouching === true) {
+              that._checkPosition();
+              that.settings.onDragEnd();
+              isTouching = false;
+            }
           }
         });
       }
@@ -371,7 +377,7 @@
           // Reset
           that.$element.removeClass(defaults.firstItemClass);
           that.$arrowPrev.removeAttr('disabled');
-        } else if (innerOffset === 0) {
+        } else if (innerOffset <= 0) {
           that.$element.addClass(defaults.firstItemClass);
           that.$arrowPrev.attr('disabled', 'disabled');
 
