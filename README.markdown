@@ -22,5 +22,12 @@ Try it on touch devices!
 $('.horizon-swiper.basic').horizonSwiper();
 ```
 
+### Browser support
+* Chrome
+* FireFox
+* Safari
+* Internet Explorer (11, 10, 9, 8)
+* Microsoft Edge
+
 ## Author
 Sebastian Sauer - [http://www.sebsauer.de](http://www.sebsauer.de)
