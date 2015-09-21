@@ -326,23 +326,42 @@
       var newPosition = 0;
       var isTouching = false;
 
-      var updatePosition = function (e) {
+      var updatePosition = function ( e ) {
         if ( isTouchDevice === false ) {
           newPosition = innerXposition + (mouseXposition - e.pageX);
           that.$inner.scrollLeft( newPosition );
         }
       };
 
+
+      // Touch events
+
+      that.$element.on({
+        'touchstart': ( e ) => {
+          isTouchDevice = true;
+          isTouching = true;
+          that.settings.onDragStart();
+        }
+      });
+
+      defaults.$document.on({
+        'touchend': ( e ) => {
+          if ( isTouching === true ) {
+            that._checkPosition();
+            that.settings.onDragEnd();
+            isTouching = false;
+          }
+        }
+      });
+
+
+      // Mouse events
+
       if ( that.settings.mouseDrag === true &&
            isTouchDevice === false ) {
         that.$element.addClass( defaults.mouseDragClass );
 
         that.$element.on({
-          'touchstart': ( e ) => {
-            isTouchDevice = true;
-            isTouching = true;
-            that.settings.onDragStart();
-          },
           'mousedown': ( e ) => {
             isClicked = true;
             that.settings.onDragStart();
@@ -363,13 +382,6 @@
               that.settings.onDragEnd();
             }
             isClicked = false;
-          },
-          'touchend': ( e ) => {
-            if ( isTouching === true ) {
-              that._checkPosition();
-              that.settings.onDragEnd();
-              isTouching = false;
-            }
           }
         });
       }

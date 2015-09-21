@@ -317,15 +317,32 @@
         }
       };
 
+      // Touch events
+
+      that.$element.on({
+        'touchstart': function touchstart(e) {
+          isTouchDevice = true;
+          isTouching = true;
+          that.settings.onDragStart();
+        }
+      });
+
+      defaults.$document.on({
+        'touchend': function touchend(e) {
+          if (isTouching === true) {
+            that._checkPosition();
+            that.settings.onDragEnd();
+            isTouching = false;
+          }
+        }
+      });
+
+      // Mouse events
+
       if (that.settings.mouseDrag === true && isTouchDevice === false) {
         that.$element.addClass(defaults.mouseDragClass);
 
         that.$element.on({
-          'touchstart': function touchstart(e) {
-            isTouchDevice = true;
-            isTouching = true;
-            that.settings.onDragStart();
-          },
           'mousedown': function mousedown(e) {
             isClicked = true;
             that.settings.onDragStart();
@@ -346,13 +363,6 @@
               that.settings.onDragEnd();
             }
             isClicked = false;
-          },
-          'touchend': function touchend(e) {
-            if (isTouching === true) {
-              that._checkPosition();
-              that.settings.onDragEnd();
-              isTouching = false;
-            }
           }
         });
       }
