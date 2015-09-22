@@ -19,7 +19,7 @@ Try it on touch devices!
 
 ### Javascript
 ```
-$('.horizon-swiper.basic').horizonSwiper();
+$('.horizon-swiper').horizonSwiper();
 ```
 
 ### Browser support
