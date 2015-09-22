@@ -36,7 +36,7 @@
     arrows: true,
     arrowPrevText: '',
     arrowNextText: '',
-    animateionSpeed: 500,
+    animationSpeed: 500,
     mouseDrag: true,
 
     // Methods and callbacks
@@ -255,7 +255,7 @@
       that.settings.onSlideStart();
       that.$inner.animate( {
         scrollLeft: offset[ 0 ]
-      }, that.settings.animateionSpeed, () => {
+      }, that.settings.animationSpeed, () => {
 
         if ( offset[ 1 ] === 'end-position' ) {
           that.settings.onEnd();
