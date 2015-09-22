@@ -1,6 +1,6 @@
 /*
  * Horizon Swiper
- * Version 1.0.0
+ * Version 1.1.0
  * Domain ( http://horizon-swiper.sebsauer.de/ )
  * Copyright 2015 Sebastian Sauer ( http://www.sebsauer.de/ )
  * Licensed under MIT ( https://github.com/sebsauer90/horizon-swiper/blob/master/LICENSE )
@@ -56,6 +56,26 @@
   }
 
 
+  /* Dots
+  /* -------------------------- */
+
+  .horizon-dots {
+    display: none;
+    text-align: center;
+
+    .horizon-dot {
+      display: inline-block;
+      margin: 0 3px;
+    }
+  }
+
+  &.initialized {
+    .horizon-dots {
+      display: block;
+    }
+  }
+
+
   /* Arrows
   /* -------------------------- */
 
@@ -64,7 +84,7 @@
     display: none;
   }
 
-  &.show-arrows {
+  &.initialized {
     .horizon-prev,
     .horizon-next {
       display: block;

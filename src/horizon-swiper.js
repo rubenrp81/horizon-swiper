@@ -1,6 +1,6 @@
 /*
  * Horizon Swiper
- * Version 1.0.0
+ * Version 1.1.0
  * Domain ( http://horizon-swiper.sebsauer.de/ )
  * Copyright 2015 Sebastian Sauer ( http://www.sebsauer.de/ )
  * Licensed under MIT ( https://github.com/sebsauer90/horizon-swiper/blob/master/LICENSE )
@@ -33,6 +33,8 @@
     // Default settings
     item: '.horizon-item',
     showItems: 'auto',
+    dots: false,
+    numberedDots: false,
     arrows: true,
     arrowPrevText: '',
     arrowNextText: '',
@@ -54,9 +56,12 @@
 
     innerClass: 'horizon-inner',
     outerClass: 'horizon-outer',
+    dotContainer: '<nav class="horizon-dots"></nav>',
     arrowPrev: ['<button class="horizon-prev">', '</button>'],
     arrowNext: ['<button class="horizon-next">', '</button>'],
-    showArrowsClass: 'show-arrows',
+    showArrowsClass: 'arrows',
+    showDotsClass: 'dots',
+    initializedClass: 'initialized',
     mouseDragClass: 'mouse-drag',
     firstItemClass: 'first-item',
     lastItemClass: 'last-item'
@@ -78,6 +83,7 @@
       that.$items = that.$element.find(this.settings.item);
       that.$inner = null;
       that.$outer = null;
+      that.$dots = null;
       that.$arrowPrev = null;
       that.$arrowNext = null;
 
@@ -116,10 +122,12 @@
 
       that._setWrapper();
       that._addArrows();
+      that._addDots();
       that._mouseDrag();
       that.setSizes();
       that._resize();
 
+      that._checkPosition();
       that.initialized = true;
     };
 
@@ -145,10 +153,19 @@
       that.viewportSize = that.$inner.width();
       that.$outer.css({ 'max-height': that.maxHeight + 'px' });
 
-      if (that.viewportSize < that.innerContainerWidth && that.settings.arrows === true) {
-        that.$element.addClass(defaults.showArrowsClass);
+      if (that.viewportSize < that.innerContainerWidth) {
+        that.$element.addClass(defaults.initializedClass);
+
+        if (that.settings.arrows === true) {
+          that.$element.addClass(defaults.showArrowsClass);
+        }
+
+        if (that.settings.dots === true) {
+          that.$element.addClass(defaults.showDotsClass);
+        }
       } else {
-        that.$element.removeClass(defaults.showArrowsClass);
+        that.$element.removeClass(defaults.initializedClass);
+        that.$element.addClass(defaults.showArrowsClass);
       }
     };
 
@@ -163,6 +180,7 @@
 
       var resizeFunction = function resizeFunction() {
         that.setSizes();
+        that._checkPosition();
       };
 
       defaults.$window.resize(function () {
@@ -191,6 +209,94 @@
         itemWidth = 100 / that.settings.showItems;
         that.$items.css({ width: itemWidth + '%' });
       }
+
+      for (var i = 0; i < that.$items.length; ++i) {
+        var $item = $(that.$items[i]);
+        $item.attr('data-horizon-index', i);
+      }
+    };
+
+    /**
+     * Add dots to the swiper
+     *
+     * @private
+     */
+    Plugin.prototype._addDots = function () {
+      var that = this;
+      var dotName = '';
+
+      if (that.settings.dots === true) {
+        that.$dots = $(defaults.dotContainer);
+
+        for (var i = 0; i < that.$items.length; ++i) {
+
+          if (that.settings.numberedDots === true) {
+            dotName = i;
+          }
+
+          var $newDot = $('<button class="horizon-dot" data-horizon-target="' + i + '">' + dotName + '</button>');
+          that.$dots.append($newDot);
+        }
+
+        that.$element.append(that.$dots);
+        that.$dots.find('button').on('click', function (e) {
+          e.preventDefault();
+
+          var $this = $(this);
+          var horizonTarget = $this.attr('data-horizon-target');
+
+          that._dotScroll(horizonTarget);
+        });
+      }
+    };
+
+    /**
+     * Scroll to a dot target
+     *
+     * @param horizonTarget
+     * @private
+     */
+    Plugin.prototype._dotScroll = function (horizonTarget) {
+      var that = this;
+      var $target = that.$dots.find('[data-horizon-index="' + horizonTarget + '"]');
+      var targetWidth = $target.outerWidth(true);
+      var leftOffset = 0;
+      var scrollTo = 0;
+      var centerValue = that.viewportSize / 2 - targetWidth / 2;
+
+      that.isAnimate = true;
+      that.settings.onSlideStart();
+
+      for (var i = 0; i < that.$items.length; ++i) {
+        var $item = $(that.$items[i]);
+
+        if (i < horizonTarget) {
+          leftOffset += $item.outerWidth(true);
+        }
+      }
+
+      scrollTo = leftOffset - centerValue;
+
+      if (scrollTo < 0) {
+        scrollTo = 0;
+      } else if (scrollTo > that.innerContainerWidth - that.viewportSize) {
+        scrollTo = that.innerContainerWidth - that.viewportSize;
+      }
+
+      that.$inner.animate({
+        scrollLeft: scrollTo
+      }, that.settings.animationSpeed, function () {
+        that._checkPosition();
+        that.settings.onSlideEnd();
+
+        if (horizonTarget === that.$items.length) {
+          that.settings.onEnd();
+        } else if (horizonTarget === 0) {
+          that.settings.onStart();
+        }
+
+        that.isAnimate = false;
+      });
     };
 
     /**
@@ -376,39 +482,81 @@
     };
 
     /**
-     *  Check the scrolling position and set or remove the last and first item class
+     *  Check the scrolling position
      *
      * @private
      */
     Plugin.prototype._checkPosition = function () {
       var that = this;
+      var innerOffset = that.$inner.scrollLeft();
 
       if (that.settings.arrows === true) {
-        var innerXposition = that.$inner.scrollLeft();
-        var innerOffset = that.$inner.scrollLeft();
+        that._checkArrowState(innerOffset);
+      }
 
-        if (innerOffset + that.viewportSize >= that.innerContainerWidth - 1) {
-          that.$element.addClass(defaults.lastItemClass);
-          that.$arrowNext.attr('disabled', 'disabled');
+      if (that.settings.dots === true) {
+        that._checkActiveDots(innerOffset);
+      }
+    };
 
-          // Reset
-          that.$element.removeClass(defaults.firstItemClass);
-          that.$arrowPrev.removeAttr('disabled');
-        } else if (innerOffset <= 0) {
-          that.$element.addClass(defaults.firstItemClass);
-          that.$arrowPrev.attr('disabled', 'disabled');
+    /**
+     * Check the active dots and set the active class
+     *
+     * @param innerOffset
+     * @private
+     */
+    Plugin.prototype._checkActiveDots = function (innerOffset) {
+      var that = this;
+      var itemStart = 0;
+      var itemEnd = 0;
+      var range = [innerOffset, innerOffset + that.viewportSize];
 
-          // Reset
-          that.$element.removeClass(defaults.lastItemClass);
-          that.$arrowNext.removeAttr('disabled');
+      for (var i = 0; i < that.$items.length; ++i) {
+        var $item = $(that.$items[i]);
+        var itemWidth = $item.outerWidth(true);
+
+        itemEnd += itemWidth;
+
+        if (itemStart + itemWidth / 2 >= range[0] && itemEnd - itemWidth / 2 <= range[1]) {
+          that.$dots.find('[data-horizon-target="' + i + '"]').addClass('active');
         } else {
-          // Reset classes
-          that.$element.removeClass(defaults.lastItemClass).removeClass(defaults.firstItemClass);
-
-          // Remove disabled buttons
-          that.$arrowPrev.removeAttr('disabled');
-          that.$arrowNext.removeAttr('disabled');
+          that.$dots.find('[data-horizon-target="' + i + '"]').removeClass('active');
         }
+
+        itemStart += itemWidth;
+      }
+    };
+
+    /**
+     * Check for the arrow start and end position
+     *
+     * @param innerOffset
+     * @private
+     */
+    Plugin.prototype._checkArrowState = function (innerOffset) {
+      var that = this;
+
+      if (innerOffset + that.viewportSize >= that.innerContainerWidth - 1) {
+        that.$element.addClass(defaults.lastItemClass);
+        that.$arrowNext.attr('disabled', 'disabled');
+
+        // Reset
+        that.$element.removeClass(defaults.firstItemClass);
+        that.$arrowPrev.removeAttr('disabled');
+      } else if (innerOffset <= 0) {
+        that.$element.addClass(defaults.firstItemClass);
+        that.$arrowPrev.attr('disabled', 'disabled');
+
+        // Reset
+        that.$element.removeClass(defaults.lastItemClass);
+        that.$arrowNext.removeAttr('disabled');
+      } else {
+        // Reset classes
+        that.$element.removeClass(defaults.lastItemClass).removeClass(defaults.firstItemClass);
+
+        // Remove disabled buttons
+        that.$arrowPrev.removeAttr('disabled');
+        that.$arrowNext.removeAttr('disabled');
       }
     };
 
