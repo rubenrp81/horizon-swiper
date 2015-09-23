@@ -97,7 +97,7 @@
       // Initialize if the document is ready and window is loaded
 
       var windowLoadFunction = function () {
-        if (that.initialized === true) {
+        if ( that.initialized ) {
           that.setSizes();
         } else {
           setTimeout( () => {
@@ -150,6 +150,7 @@
         if ( height > that.maxHeight ) {
           that.maxHeight = height;
         }
+
         that.innerContainerWidth += width;
       }
 
@@ -159,11 +160,11 @@
       if ( that.viewportSize < that.innerContainerWidth ) {
         that.$element.addClass( defaults.initializedClass );
 
-        if ( that.settings.arrows === true ) {
+        if ( that.settings.arrows ) {
           that.$element.addClass( defaults.showArrowsClass );
         }
 
-        if ( that.settings.dots === true ) {
+        if ( that.settings.dots ) {
           that.$element.addClass( defaults.showDotsClass );
         }
       } else {
@@ -217,8 +218,7 @@
       }
 
       for (var i = 0; i < that.$items.length; ++i) {
-        var $item = $( that.$items[i] );
-        $item.attr('data-horizon-index', i);
+        $( that.$items[i] ).attr('data-horizon-index', i);
       }
     };
 
@@ -230,28 +230,21 @@
      */
     Plugin.prototype._addDots = function () {
       var that = this;
-      var dotName = '';
 
-      if ( that.settings.dots === true ) {
+      if ( that.settings.dots ) {
         that.$dots = $( defaults.dotContainer );
 
         for (var i = 0; i < that.$items.length; ++i) {
-
-          if ( that.settings.numberedDots === true ) {
-            dotName = i;
-          }
-
+          var dotName = ( that.settings.numberedDots ) ? i : '';
           var $newDot = $( '<button class="horizon-dot" data-horizon-target="' + i + '">' + dotName + '</button>' );
           that.$dots.append( $newDot );
         }
 
         that.$element.append( that.$dots );
-        that.$dots.find( 'button' ).on( 'click', function (e) {
+
+        that.$dots.find( 'button' ).on( 'click', function ( e ) {
           e.preventDefault();
-
-          var $this = $(this);
-          var horizonTarget = $this.attr('data-horizon-target');
-
+          var horizonTarget = $(this).attr( 'data-horizon-target' );
           that._dotScroll( horizonTarget );
         } );
       }
@@ -276,10 +269,8 @@
       that.settings.onSlideStart();
 
       for (var i = 0; i < that.$items.length; ++i) {
-        var $item = $( that.$items[i] );
-
         if ( i < horizonTarget ) {
-          leftOffset += $item.outerWidth( true );
+          leftOffset += $( that.$items[i] ).outerWidth( true );
         }
       }
 
@@ -327,14 +318,14 @@
 
         that.$arrowPrev.on( 'click', (e) => {
           e.preventDefault();
-          if ( that.isAnimate === false ) {
+          if ( ! that.isAnimate ) {
             that._scrollTo( 'previous' );
           }
         });
 
         that.$arrowNext.on( 'click', (e) => {
           e.preventDefault();
-          if ( that.isAnimate === false ) {
+          if ( ! that.isAnimate ) {
             that._scrollTo( 'next' );
           }
         });
@@ -353,20 +344,20 @@
       var offset = that._getOffset( direction );
       that.isAnimate = true;
 
-      if ( offset === 'end-position' ||
-           offset === 'start-position' ) {
+      if ( offset === 'end' ||
+           offset === 'start' ) {
         that.isAnimate = false;
         return;
       }
 
       that.settings.onSlideStart();
+
       that.$inner.animate( {
         scrollLeft: offset[ 0 ]
       }, that.settings.animationSpeed, () => {
-
-        if ( offset[ 1 ] === 'end-position' ) {
+        if ( offset[ 1 ] === 'end' ) {
           that.settings.onEnd();
-        } else if ( offset[ 1 ] === 'start-position' ) {
+        } else if ( offset[ 1 ] === 'start' ) {
           that.settings.onStart();
         }
 
@@ -392,29 +383,28 @@
 
       if ( direction === 'next' &&
            ( offsetState + that.viewportSize ) === ( that.innerContainerWidth ) ) {
-        return 'end-position';
-      }
-
-      if ( direction === 'previous' &&
+        return 'end';
+      } else if ( direction === 'previous' &&
            offsetState === 0 ) {
-        return 'start-position';
+        return 'start';
       }
 
       for ( var i = 0; i < that.$items.length; ++i ) {
         var width = $( that.$items[ i ] ).outerWidth( true );
         var state = '';
+
         calcActiveItem += width;
 
         if ( direction === 'next' &&
              calcActiveItem > viewWidth ) {
           if ( ( i + 1 ) === ( that.$items.length ) ) {
-            state = 'end-position';
+            state = 'end';
           }
           return [ ( calcActiveItem - that.viewportSize ), state ];
         } else if ( direction === 'previous' &&
                     calcActiveItem >= offsetState ) {
           if ( ( calcActiveItem - width ) <= 0 ) {
-            state = 'start-position';
+            state = 'start';
           }
           return [ ( calcActiveItem - width ), state ];
         }
@@ -436,10 +426,12 @@
       var outerXposition = that.$inner.offset().left;
       var newPosition = 0;
       var isTouching = false;
+      var isScrolling = false;
+      var scrollTimer = null;
 
       var updatePosition = function ( e ) {
-        if ( isTouchDevice === false ) {
-          newPosition = innerXposition + (mouseXposition - e.pageX);
+        if ( ! isTouchDevice ) {
+          newPosition = innerXposition + ( mouseXposition - e.pageX );
           that.$inner.scrollLeft( newPosition );
         }
       };
@@ -450,13 +442,14 @@
         'touchstart': ( e ) => {
           isTouchDevice = true;
           isTouching = true;
+          isScrolling = true;
           that.settings.onDragStart();
         }
       });
 
       defaults.$document.on({
         'touchend': ( e ) => {
-          if ( isTouching === true ) {
+          if ( isTouching ) {
             that._checkPosition();
             that.settings.onDragEnd();
             isTouching = false;
@@ -464,10 +457,20 @@
         }
       });
 
+      that.$inner.scroll( function () {
+          clearTimeout( scrollTimer );
+          scrollTimer = setTimeout( function () {
+            if ( isScrolling ) {
+              that._checkPosition();
+              that.settings.onDragEnd();
+              isScrolling = false;
+            }
+          }, 250);
+      });
+
       // Mouse events
 
-      if ( that.settings.mouseDrag === true &&
-           isTouchDevice === false ) {
+      if ( that.settings.mouseDrag && ! isTouchDevice ) {
         that.$element.addClass( defaults.mouseDragClass );
 
         that.$element.on({
@@ -487,7 +490,7 @@
             isClicked && updatePosition( e );
           },
           'mouseup': ( e ) => {
-            if ( isClicked === true ) {
+            if ( isClicked ) {
               if ( e.target.tagName.toLowerCase() !== 'button' ) {
                 that._checkPosition();
                 that.settings.onDragEnd();
@@ -509,13 +512,8 @@
       var that = this;
       var innerOffset = that.$inner.scrollLeft();
 
-      if ( that.settings.arrows === true ) {
-        that._checkArrowState( innerOffset );
-      }
-
-      if ( that.settings.dots === true ) {
-        that._checkActiveDots( innerOffset );
-      }
+      that.settings.arrows && that._checkArrowState( innerOffset );
+      that.settings.dots && that._checkActiveDots( innerOffset );
     }
 
 
@@ -561,24 +559,17 @@
       if ( ( innerOffset + that.viewportSize ) >= ( that.innerContainerWidth - 1 ) ) {
         that.$element.addClass( defaults.lastItemClass );
         that.$arrowNext.attr( 'disabled', 'disabled' );
-
-        // Reset
         that.$element.removeClass( defaults.firstItemClass );
         that.$arrowPrev.removeAttr( 'disabled' );
       } else if ( innerOffset <= 0 ) {
         that.$element.addClass( defaults.firstItemClass );
         that.$arrowPrev.attr( 'disabled', 'disabled' );
-
-        // Reset
         that.$element.removeClass( defaults.lastItemClass )
         that.$arrowNext.removeAttr( 'disabled' );
       } else {
-        // Reset classes
         that.$element
           .removeClass( defaults.lastItemClass )
           .removeClass( defaults.firstItemClass );
-
-        // Remove disabled buttons
         that.$arrowPrev.removeAttr( 'disabled' );
         that.$arrowNext.removeAttr( 'disabled' );
       }
