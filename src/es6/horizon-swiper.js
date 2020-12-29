@@ -110,7 +110,7 @@
         that.init();
       } );
 
-      defaults.$window.load( () => {
+      defaults.$window.on( 'load', () => {
         windowLoadFunction();
       } );
     }
