@@ -109,7 +109,7 @@
         that.init();
       });
 
-      defaults.$window.load(function () {
+      defaults.$window.on('load', function () {
         windowLoadFunction();
       });
     }
