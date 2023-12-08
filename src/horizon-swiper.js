@@ -365,7 +365,7 @@
      */
     Plugin.prototype._getOffset = function (direction) {
       var that = this;
-      var offsetState = that.$inner.scrollLeft();
+      var offsetState = Math.ceil(that.$inner.scrollLeft());
       var calcActiveItem = 0;
       var viewWidth = offsetState + that.viewportSize;
 
